@@ -1,0 +1,293 @@
+package fgame;
+
+enum CS_CMD_ID
+{
+    CS_CMD_REG          = 100;
+    //500+  玩家信息相关 
+    CS_CMD_LOGIN = 500;
+    CS_CMD_HEART_BEAT 	= 501;
+    //关卡操作
+    CS_CMD_ENTER_STAGE  = 601;
+    CS_CMD_PASS_STAGE   = 602;
+
+    //Pvp相关
+    CS_CMD_PVP_MATCH    = 2000;
+    CS_CMD_PVP_START    = 2001;
+    CS_CMD_PVP_END      = 2004;
+    CS_CMD_PVP_WEAPON   = 2005;
+    CS_CMD_PVP_PING     = 2006;
+    CS_CMD_Pvp_Mov	= 2007;
+    CS_CMD_Pvp_Skill	= 2008;
+    CS_CMD_Pvp_Damage	= 2009;
+    CS_CMD_PVP_MATCH_CANCEL = 2010;
+    CS_CMD_PVP_PICK_ITEM = 2011;
+    CS_CMD_PVP_BUFF     = 2012;
+    CS_CMD_PVP_LEAVE    = 2013;
+    CS_CMD_PVP_RELIVE   = 2014;
+}
+
+message CSErrorMsg{
+    required uint32 ErrCode = 1;
+}
+
+//登陆
+message CSLoginReq{
+    required string OpenId = 1;
+    required uint32 Inner  = 2;
+}
+
+message CSLoginResp{
+    required uint32 Uin = 1;
+}
+
+//注册
+message CSRegReq{
+    required string Account = 1;
+    required string Pwd     = 2;
+}
+
+message CSRegResp{
+    required uint32 Uin = 1;
+}
+
+//心跳
+message CSHeartBeatReq{
+    required uint32 Msg_ID = 1;
+}
+
+message CSHeartBeatResp{
+    required uint32 Ret = 1;
+}
+
+message CSPlayInfo{
+    required uint32 Uin = 1;
+    required string Name = 2;
+    required int32 Camp = 3;
+    required int32 Seat = 4;
+    required int32 Weapon = 5;
+}
+
+message CSPoint{
+    required int32 x = 1;
+    required int32 y = 2;
+}
+
+// 匹配
+message CSPvpMatchReq{
+    required uint32 PlayType = 1; //玩法类型 0 随机 1 基本 2 贪吃蛇 3 水枪
+    required uint32 BattleType = 2; //战斗类型 0 混在 1 2 3 4
+}
+
+message CSPvpMatchResp{
+    required uint32 Match_Ret   = 1;
+    required uint32 Type = 2;
+    required uint32 PlayType = 3;
+    repeated CSPlayInfo PlayInfo = 4;
+}
+
+// 取消匹配
+message CSPvpMatchCancelReq{
+    required uint32 Type = 1;
+}
+
+message CSPvpMatchCancelResp{
+    required uint32 Uin   = 1;
+}
+
+
+//随机道具
+message CSRandItem{
+    required uint32 PosX = 1;
+    required uint32 PosY = 2;
+    required uint32 ItemId = 3;
+    required uint32 Serial = 4; //物品序号
+}
+
+//开始
+message CSPvpStartReq{
+    required uint32 Type = 1;
+}
+
+message CSPvpStartResp{
+    required uint32 StartType   = 1;
+    optional uint32 MapId       = 2;
+    optional uint32 Type        = 3;
+    optional uint32 Ts          = 4;
+    repeated CSRandItem RandItems = 5;
+}
+
+//结束
+message CSPvpEndReq{
+    required uint32 Wincamp     = 1;    //胜利者阵营
+}
+
+message CSItem
+{
+    required uint32 ItemId = 1;
+    required uint32 ItemCount = 2;
+}
+
+message CSPvpReward{
+    required uint32 Uin = 1;
+    required uint32 Result = 2;
+    required uint32 gold = 3;  
+    repeated CSItem Items = 4;
+}
+message CSPvpEndResp{    
+    repeated uint32 Wincamp = 1;
+}
+
+//移动 除了自己,广播其他玩家
+message CSPvpMovReq{
+    required uint32 Uin     = 1;
+    required CSPoint velocity = 2;
+    required CSPoint position = 3;
+    required uint32 status = 4;
+}
+
+//技能
+message CSPvpSkillReq{
+    required uint32 Uin = 1;
+    required uint32 SourceUin = 2; //施法者
+    required uint32 SkillUid = 3;    //技能唯一id
+    required uint32 SkillId = 4;    //技能id
+    required CSPoint position = 5;  //释放位置
+    optional uint32 SkillStatus = 6;    //释放状态
+}
+
+//伤害
+message CSDamageInfo{
+    required uint32 Uin = 1;
+    required uint32 Type = 2;
+    optional uint32 Subuid = 3;
+}
+
+//除了自己,广播其他玩家
+message CSPvpDamageReq{
+    required uint32 Uin = 1;
+    required uint32 Type = 2;
+	required CSPoint position = 3;
+    optional uint32 sourceUin = 4;
+}
+
+message CSBuff{
+   required uint32 Serial = 1;     //编号
+   required uint32 Buffid = 2;     //id
+   required int32 BuffValue = 3; //buff值
+   required uint32 BuffTime = 4; //持续时间
+}
+
+message CSSysBuffReq{
+   required uint32 Uin = 1;
+   optional CSBuff Buff = 2;
+}
+
+message CSSysBuffResp{
+   required uint32 Uin = 1;
+   optional CSBuff Buff = 2;
+}
+
+message CSPlayerStatus
+{
+   required uint32 Uin = 1;
+   required uint32 PosX = 2;
+   required uint32 PosY = 3;
+   repeated CSBuff Buffs = 4;
+}
+
+message CSPvpPingReq{
+    required float Ts       = 1; //准备开始后连续发送三次ping协议 每隔1秒发送一次
+}
+
+message CSPvpPingResp{
+    required uint32 Host  = 1;
+    //主机ID 客户端要判断
+    //如果是自己 后面就要上传Map数据和AI动作
+    //如果不是自己 后面就要根据主机的Map数据来修正自己的数据
+    //pvp过程中间有人断线也会发送该消息
+}
+message CSPvpLeaveReq{
+  required uint32 Uin = 1;
+}
+
+message CSPvpLeaveResp{
+  required uint32 Uin = 1;
+}
+
+//武器
+message CSPvpWeaponReq{
+    required uint32 Uin         = 1;
+    required uint32 Serial      = 2;    //编号
+}
+
+message CSPvpWeaponResp{
+    required uint32 Uin         = 1;
+    required uint32 Serial      = 2;    //编号
+    required uint32 SkillId     = 3;    //武器
+}
+
+//捡道具
+message CSPvpPickItemReq{
+    required uint32 Uin = 1;
+    required uint32 ItemSerial = 2;
+}
+
+message CSPvpPickItemResp{
+    required uint32 Uin = 1;
+    required uint32 ItemSerial = 2;
+}
+
+//复活
+message CSPvpRelive{
+    required uint32 Uin = 1;      //复活的玩家
+    required uint32 LiveSeat = 2; //复活的位置
+}
+
+message C2ServerMsg{
+    optional CSLoginReq         Login_Req = 2;
+    optional CSRegReq           Reg_Req = 3;
+    optional CSHeartBeatReq     HeartBeat_Req = 4;
+
+    //暂时5个协议
+    optional CSPvpMatchReq      Match_Req = 5;
+    optional CSPvpStartReq      Start_Req = 6;
+    optional CSPvpEndReq        End_Req = 7;
+
+    optional CSPvpSkillReq      Skill_Req= 8;
+    optional CSPvpDamageReq     Damage_Req= 9;
+    optional CSPvpMovReq		Mov_Req=10;
+    optional CSPvpPingReq       Ping_Req = 13;
+    optional CSPvpWeaponReq     WeaponReq = 14;
+    optional CSPvpMatchCancelReq MatchCancelReq = 15;
+    optional CSPvpPickItemReq   PickItemReq = 16;
+    optional CSSysBuffReq       BuffReq = 17;
+    optional CSPvpLeaveReq      PvpLeaveReq = 18;
+}
+
+message S2ClientMsg{
+    optional CSErrorMsg         Error_Msg  = 1;
+
+    optional CSLoginResp        Login_Resp = 2;
+    optional CSRegResp          Reg_Resp = 3;
+    optional CSHeartBeatResp    HeartBeat_Resp = 4;
+
+
+    optional CSPvpMatchResp     Match_Resp = 5;
+    optional CSPvpStartResp     Start_Resp = 6;
+    optional CSPvpEndResp       End_Resp = 7;
+
+    optional CSPvpSkillReq		Skill_Resp = 8;
+    optional CSPvpDamageReq		Damage_Resp= 9;
+    optional CSPvpMovReq		Mov_Resp=10;
+    optional CSPvpPingResp      Ping_Resp = 13;
+    optional CSPvpWeaponResp    WeaponResp = 14;
+    optional CSPvpMatchCancelResp MatchCancelResp = 15;
+    optional CSPvpPickItemResp  PickItemResp = 16;
+    optional CSSysBuffResp      BuffResp = 17;
+    optional CSPvpLeaveResp     PvpLeaveResp = 18;
+    optional CSPvpRelive        PvpReliveResp = 19;
+}
+
+
+
+
